@@ -1,3 +1,8 @@
+# This is a modification of the project below to work with the Arduino Wifi shield.
+In this form it was modified to turn an led on and off while I got it working, but the shell remains to turn it back into an rc car controller.
+I also added a function to reinitialize the connection after the automated 6 minute timeout. 
+I wrote this as a part of my final project for Dev Bootcamp, found here: [Robo.JS](https://github.com/JackMarx/RoboJS)
+
 # Arduino Pusher Client, a Pusher client developed for use on Arduino devices
 Blog: [World Domination Using Arduinos And Websockets](http://kevinrohling.wordpress.com/2011/09/14/world-domination-using-arduinos-and-websockets)
 
@@ -41,7 +46,7 @@ client.subscribe("my-channel");
 client.subscribe("private-my-channel", "my-auth-token");  
 
 //Subscribing to a Presence Channel
-client.subscribe("presence-my-channel", "my-auth-token", "my-user-id"); 
+client.subscribe("presence-my-channel", "my-auth-token", "my-user-id");
 
 //Unsubscribing to a Channel
 client.unsubscribe("my-channel");  

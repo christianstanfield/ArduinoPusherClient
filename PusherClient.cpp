@@ -2,17 +2,17 @@
  PusherClient, a Pusher (http://pusherapp.com) client for Arduino
  Copyright 2011 Kevin Rohling
  http://kevinrohling.com
- 
+
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  copies of the Software, and to permit persons to whom the Software is
  furnished to do so, subject to the following conditions:
- 
+
  The above copyright notice and this permission notice shall be included in
  all copies or substantial portions of the Software.
- 
+
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -49,7 +49,7 @@ prog_char unsubscribeEventName[] PROGMEM = "pusher:unsubscribe";
 
 
 PROGMEM const char *stringTable[] =
-{   
+{
     stringVar0,
     stringVar1,
     stringVar2,
@@ -72,18 +72,20 @@ String PusherClient::getStringTableItem(int index) {
 }
 
 PusherClient::PusherClient()
-{ 
+{
     _client.setDataArrivedDelegate(dataArrived);
+    Serial.println("Client instantiated");
 }
 
 bool PusherClient::connect(String appId) {
+    Serial.println("PC Connect");
     String stringVar0 = getStringTableItem(0);
     String path = getStringTableItem(3);
     path.replace(stringVar0, appId);
 
     char pathData[path.length() + 1];
     path.toCharArray(pathData, path.length() + 1);
-    
+
     return _client.connect("ws.pusherapp.com", pathData, 80);
 }
 
@@ -149,10 +151,10 @@ void PusherClient::triggerEvent(String eventName, String eventData) {
     String stringVar0 = getStringTableItem(0);
     String stringVar1 = getStringTableItem(1);
     String message = getStringTableItem(10);
-    
+
     message.replace(stringVar0, eventName);
     message.replace(stringVar1, eventData);
-    
+
     _client.send(message);
 }
 
@@ -160,11 +162,11 @@ void PusherClient::triggerEvent(String eventName, String eventData) {
 void PusherClient::dataArrived(WebSocketClient client, String data) {
     String eventNameStart = getStringTableItem(11);
     String eventName = parseMessageMember(eventNameStart, data);
-    
+
     if (_bindAllDelegate != NULL) {
         _bindAllDelegate(data);
     }
-    
+
     EventDelegate delegate = _bindMap[eventName];
     if (delegate != NULL) {
         delegate(data);
@@ -174,13 +176,13 @@ void PusherClient::dataArrived(WebSocketClient client, String data) {
 String PusherClient::parseMessageMember(String memberName, String data) {
     memberName = "\"" + memberName + "\"";
     int memberDataStart = data.indexOf(memberName) + memberName.length();
-    
+
     char currentCharacter;
     do {
         memberDataStart++;
         currentCharacter = data.charAt(memberDataStart);
     } while (currentCharacter == ' ' || currentCharacter == ':' || currentCharacter == '\"');
-    
+
     int memberDataEnd = memberDataStart;
     bool isString = data.charAt(memberDataStart-1) == '\"';
     if (!isString) {
@@ -198,7 +200,7 @@ String PusherClient::parseMessageMember(String memberName, String data) {
             currentCharacter = data.charAt(memberDataEnd);
         } while (currentCharacter != '"' || previousCharacter == '\\');
     }
-    
+
     String result = data.substring(memberDataStart, memberDataEnd);
     result.replace("\\\"", "\"");
     return result;

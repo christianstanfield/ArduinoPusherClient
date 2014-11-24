@@ -1,74 +1,88 @@
+#include <Logging.h>
+
 #include <Servo.h>
 #include <SPI.h>
 #include <Ethernet.h>
 #include <PusherClient.h>
+#include <WiFi.h>
 
-byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+char ssid[] = ""; //  your network SSID (name)
+char pass[] = "";
+
+int status = WL_IDLE_STATUS;
+#define LOGLEVEL LOG_LEVEL_DEBUG
+
+// byte mac[] = { 0x78, 0xC4, 0xE, 0x2, 0x51, 0x28 };
 PusherClient client;
-Servo leftServo; 
-Servo rightServo; 
+
+int led = 8;
 
 void setup() {
-  pinMode(2,OUTPUT);
-  leftServo.attach(2);
-  
-  pinMode(3, OUTPUT);
-  rightServo.attach(3);
+  Log.Init(LOGLEVEL, 38400L);
 
-  leftServo.write(95);
-  rightServo.write(95);
-  
+  pinMode(led, OUTPUT);
+
   Serial.begin(9600);
-  if (Ethernet.begin(mac) == 0) {
-    Serial.println("Init Ethernet failed");
-    for(;;)
-      ;
+
+   if (WiFi.status() == WL_NO_SHIELD) {
+    Serial.println("WiFi shield not present");
+    // don't continue:
+    while(true);
   }
-  
-  if(client.connect("your-api-key-here")) {
+
+  // attempt to connect to Wifi network:
+  while (status != WL_CONNECTED) {
+    Serial.print("Attempting to connect to SSID: ");
+    Serial.println(ssid);
+    status = WiFi.begin(ssid, pass);
+
+    // wait 10 seconds for connection:
+    delay(10000);
+  }
+  Serial.println("Connected to wifi");
+
+  if(client.connect("")) {
     client.bind("forward", moveForward);
     client.bind("backward", moveBackward);
     client.bind("turn_left", turnLeft);
     client.bind("turn_right", turnRight);
     client.bind("stop", stopMoving);
     client.subscribe("robot_channel");
+    Serial.println("You win");
   }
   else {
+    Serial.println("\nSad face");
     while(1) {}
   }
 }
 
 void loop() {
-  if (client.connected()) {
+ if (client.connected()) {
     client.monitor();
-  }
-  else {
-    leftServo.write(95);
-    rightServo.write(95);
-  }
+ }
+ else {
+  client.connect("");
+  client.bind("forward", moveForward);
+  client.bind("backward", moveBackward);
+  client.subscribe("robot_channel");
+ }
 }
 
 void moveForward(String data) {
-  leftServo.write(0);
-  rightServo.write(180);
+  digitalWrite(led, HIGH);
+  delay(1000);
 }
 
 void moveBackward(String data) {
-  leftServo.write(180);
-  rightServo.write(0);
+  digitalWrite(led, LOW);
+  delay(1000);
 }
 
 void turnLeft(String data) {
-  leftServo.write(0);
-  rightServo.write(0);
 }
 
 void turnRight(String data) {
-  leftServo.write(180);
-  rightServo.write(180);
 }
 
 void stopMoving(String data) {
-  leftServo.write(95);
-  rightServo.write(95);
 }
